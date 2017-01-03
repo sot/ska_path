@@ -61,3 +61,17 @@ def ska_path(*path_args, **kwargs):
                       .format(os.path.join(*path_args)))
     else:
         return None
+
+
+def split_path(path, leading_slash=True):
+    folders = []
+    while True:
+        path, folder = os.path.split(path)
+        if folder:
+            folders.append(folder)
+        else:
+            if leading_slash and path:
+                folders.append(path)
+            break
+    folders.reverse()
+    return folders
