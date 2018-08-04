@@ -3,76 +3,36 @@
 Utility function to find file paths in the Ska environment.
 """
 import os
-import sys
+from pathlib import Path
 
-__all__ = ['root_path', 'ska_path']
-
-
-def root_path():
-    return os.path.abspath(os.sep)
+__all__ = ['ska_path']
 
 
-def ska_path(*path_args, **kwargs):
+def ska_path(*path_args):
     """
-    Return the path corresponding to supplied ``args`` in the Ska
-    environment root.
+    Return the path corresponding to supplied ``args`` relative to
+    the SKA environment variable path.
 
-    The first option of the following which exists is returned:
-
-    - SKA environment variable / *path_args
-    - /proj/sot/ska / *path_args
-    - HOME_DIRECTORY / ska / *path_args
-    - . / *path_args
-
-    If none exist then None is returned if ``raise`` is False (default),
-    otherwise an IOError exception is raised.
+    This returns a Path object or None if the path does not exist and
+    exists=False.
 
     Examples::
 
       >>> from ska_path import ska_path
       >>> AGASC_DATA = ska_path('data', 'agasc')
-      >>> ska_path()
-      '/proj/sot/ska'
-      >>> ska_path('data', 'blah', require_match=True)
-      IOError: Could not find data/blah in any valid Ska path
+      >>> ska_path('data', 'blah')
+      FileNotFoundError('/proj/sot/ska/data/blah not found')
 
     :param *path_args: zero, one or more path strings
-    :param require_match: bool, if True then require a matching path
-    :returns: path or None (if require_match=False)
+
+    :returns: Path object or None
     """
-    paths = []
-
     ska = os.environ.get('SKA')
-    if ska is not None:
-        paths.append(os.path.join(ska, *path_args))
+    if ska is None:
+        raise ValueError('SKA environment must be defined to get path')
 
-    homevar = 'HOMEPATH' if sys.platform.startswith('win') else 'HOME'
-    root = root_path()
+    path = Path(ska).joinpath(*path_args)
+    if not path.exists():
+        raise FileNotFoundError(f"No such file or directory: '{path}'")
 
-    paths.append(os.path.join(root, 'proj', 'sot', 'ska', *path_args))
-    paths.append(os.path.join(os.environ.get(homevar, root), 'ska', *path_args))
-    paths.append(os.path.join('', *path_args))
-
-    for path in paths:
-        if os.path.exists(path):
-            return path
-
-    if kwargs.get('require_match'):
-        raise IOError('Could not find {} in any valid Ska path'
-                      .format(os.path.join(*path_args)))
-    else:
-        return None
-
-
-def split_path(path, leading_slash=True):
-    folders = []
-    while True:
-        path, folder = os.path.split(path)
-        if folder:
-            folders.append(folder)
-        else:
-            if leading_slash and path:
-                folders.append(path)
-            break
-    folders.reverse()
-    return folders
+    return path
