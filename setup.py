@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from distutils.core import setup
+from setuptools import setup
+
 
 setup(name='ska_path',
       use_scm_version=True,
