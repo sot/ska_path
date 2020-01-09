@@ -4,9 +4,11 @@ Utility function to find file paths in the Ska environment.
 """
 import os
 import sys
+import ska_helpers
 
-__all__ = ['root_path', 'ska_path']
 
+__all__ = ['root_path', 'ska_path', '__version__']
+__version__ = ska_helpers.get_version(__package__)
 
 def root_path():
     return os.path.abspath(os.sep)
